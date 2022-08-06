@@ -22,7 +22,7 @@ jobs:
             cd tmpdir/
             wget https://github.com/XTLS/Xray-core/releases/download/v$ver/Xray-linux-64.zip -O $PACKAGE_NAME.zip
             unzip -o $PACKAGE_NAME.zip xray -d .
-            mv -f xray tmpdir/$PACKAGE_NAME
+            mv -f xray $PACKAGE_NAME
             sed -i '/PACKAGE_NAME/,$d' $GITHUB_ENV
             echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
             echo "COMMIT_MSG=$PACKAGE_NAME_v$ver" >> $GITHUB_ENV
@@ -55,7 +55,7 @@ jobs:
       - name: Push to master
         if: ${{ env.VER }}
         run: |
-          rm -rf tmpdir
+          rm -rf tmpdir/
           sed -i "/+ ${{ env.PACKAGE_NAME }}:/c\\+ ${{ env.PACKAGE_NAME }}: ${{ env.VER }}" README.md
           sed -i '/url =/d' .git/config
           git config --global user.name "github-actions[bot]"
