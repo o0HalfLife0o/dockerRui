@@ -1,0 +1,67 @@
+name: Update
+on:
+  schedule:
+    - cron: 0 0 * * *
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Update
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check Rui
+        run: |
+          APPNAME=ray
+          PACKAGE_NAME=charui
+          latest=$(curl -sL https://github.com/XTLS/X${APPNAME}-core/releases )
+          ver=$(echo "$latest"|grep -o 'tree/v[0-9]\+\.[0-9]\+\.[0-9]\+' |head -1 |cut -d v -f2)
+          if ! grep -q "${PACKAGE_NAME}: $ver$" README.md; then
+            mkdir -p tmpdir
+            cd tmpdir/
+            wget https://github.com/XTLS/X${APPNAME}-core/releases/download/v$ver/X${APPNAME}-linux-64.zip -O ${PACKAGE_NAME}.zip
+            unzip -o ${PACKAGE_NAME}.zip x${APPNAME} -d .
+            mv -f x${APPNAME} ${PACKAGE_NAME}
+            sed -i '/PACKAGE_NAME/,$d' $GITHUB_ENV
+            echo "PACKAGE_NAME=${PACKAGE_NAME}" >> $GITHUB_ENV
+            echo "COMMIT_MSG=${PACKAGE_NAME}_v$ver" >> $GITHUB_ENV
+            echo "VER=$ver" >> $GITHUB_ENV
+          fi
+      - name: Check Smartdns
+        run: |
+          PACKAGE_NAME=smartdns
+          latest=$(curl -sL https://github.com/pymumu/smartdns/releases )
+          ver=$(echo "$latest"|grep -o 'download/.*/smartdns-x86_64' |head -1 |cut -d \/ -f2)
+          if ! grep -q "${PACKAGE_NAME}: $ver$" README.md; then
+            mkdir -p tmpdir
+            cd tmpdir/
+            wget https://github.com/pymumu/smartdns/releases/download/$ver/smartdns-x86_64 -O ${PACKAGE_NAME}
+            sed -i '/PACKAGE_NAME/,$d' $GITHUB_ENV
+            echo "PACKAGE_NAME=${PACKAGE_NAME}" >> $GITHUB_ENV
+            echo "COMMIT_MSG=${PACKAGE_NAME}_$ver" >> $GITHUB_ENV
+            echo "VER=$ver" >> $GITHUB_ENV
+          fi
+      - name: Release and Upload Assets
+        if: ${{ env.VER }}
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          tag: ${{ env.PACKAGE_NAME }}
+          body: ${{ env.VER }}
+          allowUpdates: true
+          removeArtifacts: true
+          artifacts: tmpdir/${{ env.PACKAGE_NAME }}
+      - name: Push to master
+        if: ${{ env.VER }}
+        run: |
+          rm -rf tmpdir/
+          sed -i "/+ ${{ env.PACKAGE_NAME }}:/c\\+ ${{ env.PACKAGE_NAME }}: ${{ env.VER }}" README.md
+          sed -i '/url =/d' .git/config
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url --add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git add --all
+          git commit -m "${{ env.COMMIT_MSG }}"
+          git push -f -u origin master

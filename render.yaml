@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: charui
+    env: docker
+    region: singapore
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: AUUID
+        value: 24b4b1e1-7a89-45f6-858c-242cf53b5bdb
+      - key: CADDYIndexPage
+        value: https://github.com/AYJCSGM/mikutap/archive/master.zip
+      - key: CONFIGCADDY
+        value: https://raw.githubusercontent.com/o0HalfLife0o/dockerRui/master/etc/Caddyfile
+      - key: PATHRUI
+        value: https://github.com/o0HalfLife0o/dockerRui/releases/download/charui/charui
+      - key: CONFIGRUI
+        value: https://raw.githubusercontent.com/o0HalfLife0o/dockerRui/master/etc/charui.json
+      - key: PATHSMARTDNS
+        value: https://github.com/o0HalfLife0o/dockerRui/releases/download/smartdns/smartdns
+      - key: CONFIGSMARTDNS
+        value: https://raw.githubusercontent.com/o0HalfLife0o/dockerRui/master/etc/smartdns.conf
+      - key: PATHARGO
+        value: https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+      - key: ArgoCERT
+        value: ARGOCERT
+      - key: ArgoJSON
+        value: ARGOJSON
+      - key: ArgoDOMAIN
+        value: ARGODOMAIN
